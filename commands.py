@@ -1,5 +1,12 @@
+import telegram
+
+
 def start(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="I'm a bot, please talk to me!")
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="I'm a bot, I'm happy to help you organize your group! I promise I won't take over the world. _For now_.",
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
 
 
 def echo(update, context):
