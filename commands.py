@@ -4,32 +4,39 @@ from utils import queue, messages
 
 
 def create_queue(context):
+    """Make a new queue for the chat context"""
     context.chat_data['queue'] = queue.Queue()
 
 
 def clear_queue(context):
+    """Delete the queue from chat context"""
     if has_queue(context):
         context.chat_data.pop('queue')
 
 
 def has_queue(context):
+    """Return True if chat context already has a queue"""
     return 'queue' in context.chat_data
 
 
 def start(update, context):
+    """Send starting message"""
     messages.send(update, context, messages.START, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def echo(update, context):
+    """Echo the message"""
     messages.send(update, context, update.message.text)
 
 
 def show_args(update, context):
+    """Show arguments passed to the command"""
     answer = 'Your args:\n    ' + '\n    '.join(context.args)
     messages.send(update, context, answer)
 
 
 def print_queue(update, context):
+    """Print the queue"""
     if has_queue(context):
         messages.send(update, context, context.chat_data['queue'].format())
     else:
@@ -91,11 +98,13 @@ def next(update, context):
 
 
 def clear(update, context):
+    """Clear queue"""
     clear_queue(context)
     messages.send(update, context, '\U00002714 Queue cleared!')
 
 
 def bot_help(update, context):
+    """Print help"""
     messages.send(update, context, messages.HELP)
 
 
