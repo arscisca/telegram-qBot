@@ -62,14 +62,14 @@ def add(update, context):
     q = context.chat_data['queue']
     if item in q:
         messages.send(
-            update, context, messages.ITEM_ALREADY_IN_QUEUE.format(item=item, index=q.index(item)),
+            update, context, messages.ITEM_ALREADY_IN_QUEUE.format(item=item, index=q.index(item) + 1),
             parse_mode=telegram.ParseMode.MARKDOWN
         )
     else:
         q.append(item)
         messages.send(
             update, context,
-            "\U00002714 *{}* added to queue in position {}".format(item, len(q)),
+            messages.EMOJI_SUCCESS + " *{}* added to queue in position {}".format(item, len(q)),
             parse_mode=telegram.ParseMode.MARKDOWN
         )
 
@@ -100,7 +100,44 @@ def next(update, context):
 def clear(update, context):
     """Clear queue"""
     clear_queue(context)
-    messages.send(update, context, '\U00002714 Queue cleared!')
+    messages.send(update, context, messages.EMOJI_SUCCESS + ' Queue cleared!')
+
+
+def rm(update, context):
+    """Remove item at provided element in list"""
+    if not has_queue(context):
+        messages.send(update, context, messages.QUEUE_EMPTY)
+        return
+    # Check (only the) index was provided
+    if len(context.args) < 1:
+        # Index not provided
+        messages.send(update, context, messages.RM_INDEX_NOT_PROVIDED, parse_mode=telegram.ParseMode.MARKDOWN)
+        return
+    elif len(context.args) > 1:
+        # Too many arguments
+        messages.send(update, context, messages.RM_TOO_MANY_ARGUMENTS, parse_mode=telegram.ParseMode.MARKDOWN)
+        return
+
+    index = context.args[0]
+    if not index.isnumeric():
+        messages.send(
+            update, context,
+            messages.RM_INDEX_NOT_RECOGNIZED.format(index=index),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
+        return
+
+    q = context.chat_data['queue']
+    index = int(index)
+    if index > len(q):
+        messages.send(
+            update, context,
+            messages.RM_INDEX_NOT_IN_QUEUE.format(index=index),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
+        return
+    item, _ = q.remove(index - 1)
+    messages.send(update, context, messages.RM_SUCCESS.format(item=item), parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 def bot_help(update, context):
@@ -116,6 +153,7 @@ COMMANDS = {
     'start': start,
     'queue': print_queue,
     'add': add,
+    'rm': rm,
     'next': next,
     'clear': clear
 }
