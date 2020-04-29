@@ -47,7 +47,7 @@ def add(update, context):
     """Append an item in queue"""
     if len(context.args) == 0:
         # No arguments: push user name into the list
-        item = '@' + update.message.from_user.username
+        item = update.message.from_user.username
     else:
         # User asked for something specific. Check that the input doesn't
         # contain any forbidden character
