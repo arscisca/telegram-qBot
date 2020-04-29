@@ -11,14 +11,14 @@ This is the qBot, the bot to organize your queues. Here is a list of commands:
    /start: start your conversation with the bot
 *Queueing*:
     /queue: show queue
-    /add [_element_]: add an element in the line. If no element
+    /add [ _element_ ]: add an element in the line. If no element
         is provided, the user's username is added in the queue.
-    /next [_message_]: pick the first element in line and attach 
+    /next [ _message_ ]: pick the first element in line and attach 
         an optional message
     /clear: clear queue
 *Queue editing*:
     /rm _row_: remove the element on the provided row number
-    /insert <element> <row>: insert the element in the 
+    /insert _element_ _row_: insert the element in the 
         specified row
 """
 
