@@ -6,20 +6,20 @@ Please give me a command. I won't rebel. _For now_."""
 
 HELP = """
 This is the qBot, the bot to organize your queues. Here is a list of commands:
-Basic:
-    /help: show this help menu
-    /start: start your conversation with the bot
-Queueing:
+*Basic*:
+   /help: show this help menu
+   /start: start your conversation with the bot
+*Queueing*:
     /queue: show queue
-    /add [<element>]: add an element in the line. If no element
+    /add [_element_]: add an element in the line. If no element
         is provided, the user's username is added in the queue.
-    /next [<message>]: pick the first element in line and attach 
+    /next [_message_]: pick the first element in line and attach 
         an optional message
     /clear: clear queue
-Queue editing:
-    /rm <index>: remove the element under the provided index
-    /insert <element> <index>: insert the element in the 
-        specified index
+*Queue editing*:
+    /rm _row_: remove the element on the provided row number
+    /insert <element> <row>: insert the element in the 
+        specified row
 """
 
 QUEUE_EMPTY = "The queue is currently empty"

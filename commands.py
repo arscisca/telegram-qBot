@@ -151,7 +151,7 @@ def insert(update, context):
         return
     index, *item = context.args
     item = ' '.join(item)
-    
+
     if not has_queue(context):
         create_queue(context)
     q = context.chat_data['queue']
@@ -191,7 +191,7 @@ def insert(update, context):
 
 def bot_help(update, context):
     """Print help"""
-    messages.send(update, context, messages.HELP)
+    messages.send(update, context, messages.HELP, parse_mode=telegram.ParseMode.MARKDOWN)
 
 
 COMMANDS = {
