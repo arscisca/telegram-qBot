@@ -129,7 +129,7 @@ def rm(update, context):
 
     q = context.chat_data['queue']
     index = int(index)
-    if index > len(q):
+    if index == 0 or index > len(q):
         messages.send(
             update, context,
             messages.RM_INDEX_NOT_IN_QUEUE.format(index=index),
@@ -137,6 +137,8 @@ def rm(update, context):
         )
         return
     item, _ = q.remove(index - 1)
+    if len(q) == 0:
+        clear_queue(context)
     messages.send(update, context, messages.RM_SUCCESS.format(item=item), parse_mode=telegram.ParseMode.MARKDOWN)
 
 
