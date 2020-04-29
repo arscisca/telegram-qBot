@@ -34,10 +34,20 @@ RM_INDEX_NOT_PROVIDED   = EMOJI_RED_CROSS + \
                         "'/rm <index-of-the-item>'!"
 RM_TOO_MANY_ARGUMENTS   = EMOJI_RED_CROSS + \
                           " TMI! Please only provide the integer index of the item you want to remove."
-RM_INDEX_NOT_RECOGNIZED = EMOJI_RED_CROSS + " I did not recognize '_{index}_' as an integer index"
+RM_INDEX_NOT_RECOGNIZED = EMOJI_RED_CROSS + " I did not recognize '_{index}_' as a row number"
 RM_INDEX_NOT_IN_QUEUE   = EMOJI_RED_CROSS + " There's nothing under index _{index}_. Consult the queue with the " \
                                             "command '/queue'"
 RM_SUCCESS = EMOJI_SUCCESS + " Removed *{item}* from the queue"
+
+
+INSERT_NOT_ENOUGH_ARGUMENTS = EMOJI_RED_CROSS + " Please provide the index where you want the new item inserted and the" \
+                                                "item itself, as in '/insert <index> <item>'"
+INSERT_INDEX_NOT_RECOGNIZED = RM_INDEX_NOT_RECOGNIZED
+INSERT_INDEX_OUT_OF_BOUNDS = EMOJI_RED_CROSS + " Index '_{index}_' is outside of the queue. Please insert a vailid " \
+                                               "row number."
+INSERT_SUCCESS = EMOJI_SUCCESS + " *{item}* inserted at position {index}"
+
+
 NEXT_DEFAULT_MESSAGES = [
     "*{item}*, it's your time to shine! \U00002728",
     "*{item}*'s turn has finally arrived \U0001F389",

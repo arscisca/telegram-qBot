@@ -129,7 +129,7 @@ def rm(update, context):
 
     q = context.chat_data['queue']
     index = int(index)
-    if index == 0 or index > len(q):
+    if index <= 0 or index > len(q):
         messages.send(
             update, context,
             messages.RM_INDEX_NOT_IN_QUEUE.format(index=index),
@@ -140,6 +140,53 @@ def rm(update, context):
     if len(q) == 0:
         clear_queue(context)
     messages.send(update, context, messages.RM_SUCCESS.format(item=item), parse_mode=telegram.ParseMode.MARKDOWN)
+
+
+def insert(update, context):
+    """Insert item in the list"""
+    # Check arguments
+    if len(context.args) < 2:
+        # Not enough arguments
+        messages.send(update, context, messages.INSERT_NOT_ENOUGH_ARGUMENTS)
+        return
+    index, *item = context.args
+    item = ' '.join(item)
+    
+    if not has_queue(context):
+        create_queue(context)
+    q = context.chat_data['queue']
+
+    # Check index
+    if not index.isnumeric():
+        messages.send(
+            update, context,
+            messages.INSERT_INDEX_NOT_RECOGNIZED.format(index=index),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
+        return
+    index = int(index)
+    if index <= 0 or index > len(q):
+        messages.send(
+            update, context,
+            messages.INSERT_INDEX_OUT_OF_BOUNDS.format(index=index),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
+        return
+
+    # Check item
+    if item in q:
+        messages.send(
+            update, context,
+            messages.ITEM_ALREADY_IN_QUEUE.format(item=item, index=q.index(item) + 1),
+            parse_mode=telegram.ParseMode.MARKDOWN
+        )
+        return
+    q.insert(index - 1, item)
+    messages.send(
+        update, context,
+        messages.INSERT_SUCCESS.format(item=item, index=q.index(item) + 1),
+        parse_mode=telegram.ParseMode.MARKDOWN
+    )
 
 
 def bot_help(update, context):
@@ -156,6 +203,7 @@ COMMANDS = {
     'queue': print_queue,
     'add': add,
     'rm': rm,
+    'insert': insert,
     'next': next,
     'clear': clear
 }
