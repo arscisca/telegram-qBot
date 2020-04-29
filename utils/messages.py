@@ -1,3 +1,6 @@
+EMOJI_RED_CROSS = '\U0000274C'
+EMOJI_SUCCESS = '\U00002714'
+
 START = """I am a bot! \U0001F916
 Please give me a command. I won't rebel. _For now_."""
 
@@ -15,16 +18,26 @@ Queueing:
     /clear: clear queue
 Queue editing:
     /rm <index>: remove the element under the provided index
-    /insert <element> <position>: insert the element in the 
+    /insert <element> <posposition>: insert the element in the 
         specified index
 """
 
 QUEUE_EMPTY = "The queue is currently empty"
-ITEM_ALREADY_IN_QUEUE = "\U0000274C Item *{item}* is already in the queue at position {pos}!"
+ITEM_ALREADY_IN_QUEUE = EMOJI_RED_CROSS + " *{item}* is already in the queue at position {index}!"
 
-FORBIDDEN_ITEM_CHARACTERS = {'\n'}
-FORBIDDEN_ITEM_MESSAGE = "Sorry, I can't add your item to the list: there is a forbidden character in your message."
+FORBIDDEN_ITEM_CHARACTERS   = {'\n'}
+FORBIDDEN_ITEM_MESSAGE      = EMOJI_RED_CROSS + "Sorry, I can't add your item to the list: " \
+                                                "there is a forbidden character in your message."
 
+RM_INDEX_NOT_PROVIDED   = EMOJI_RED_CROSS + \
+                        " Please provide the index of the item to remove within the command, as in " \
+                        "'/rm <index-of-the-item>'!"
+RM_TOO_MANY_ARGUMENTS   = EMOJI_RED_CROSS + \
+                          " TMI! Please only provide the integer index of the item you want to remove."
+RM_INDEX_NOT_RECOGNIZED = EMOJI_RED_CROSS + " I did not recognize '_{index}_' as an integer index"
+RM_INDEX_NOT_IN_QUEUE   = EMOJI_RED_CROSS + " There's nothing under index _{index}_. Consult the queue with the " \
+                                            "command '/queue'"
+RM_SUCCESS = EMOJI_SUCCESS + " Removed *{item}* from the queue"
 NEXT_DEFAULT_MESSAGES = [
     "*{item}*, it's your time to shine! \U00002728",
     "*{item}*'s turn has finally arrived \U0001F389",
