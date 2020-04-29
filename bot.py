@@ -20,6 +20,7 @@ if __name__ == "__main__":
     token = read_token('.token')
     if token is None:
         print("Bot token was not found in file '{}'".format('.token'))
+        exit(-1)
     updater = Updater(token='1100753787:AAEAdkJq4PLgjiyhBIlzk00IhMWmI7y_sdI', use_context=True)
     dispatcher = updater.dispatcher
     # Command handlers
