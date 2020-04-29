@@ -18,7 +18,7 @@ Queueing:
     /clear: clear queue
 Queue editing:
     /rm <index>: remove the element under the provided index
-    /insert <element> <posposition>: insert the element in the 
+    /insert <element> <index>: insert the element in the 
         specified index
 """
 
