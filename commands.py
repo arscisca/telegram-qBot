@@ -36,6 +36,12 @@ class Command:
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
 
+    def send_simple(self, message, **kwformat):
+        self.context.bot.send_message(
+            chat_id=self.update.effective_chat.id,
+            text=message.format(**kwformat)
+        )
+
     def echo(self):
         """Echo the message"""
         self.send(self.update.message.text)
@@ -66,7 +72,7 @@ class BotFunction(Command):
 
     def print_queue(self, *args):
         if self.has_queue():
-            self.send(self.queue.format())
+            self.send_simple(self.queue.format())
         else:
             self.send(messages.QUEUE_EMPTY)
 
