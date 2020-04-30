@@ -1,5 +1,6 @@
 import telegram
 import random
+import math
 from utils import queue, messages
 
 
@@ -53,6 +54,7 @@ class Command:
 
 
 class BotFunction(Command):
+    MAX_QUEUE_LINES = 25
     @staticmethod
     def make_callable(bot_func):
         """Decorate a function with the standard signature as in
@@ -72,7 +74,22 @@ class BotFunction(Command):
 
     def print_queue(self, *args):
         if self.has_queue():
-            self.send(self.queue.format())
+            text = self.queue.format()
+            # Check if test is too long
+            if 1 + len(self.queue) > self.MAX_QUEUE_LINES:
+                # Split the message into multiple submessages
+                sections = text.split('\n')
+                sub_msg_len = math.ceil(
+                    (len(self.queue) + 1) / self.MAX_QUEUE_LINES
+                )
+                for i in range(sub_msg_len):
+                    # Send each submessage on its own
+                    start = i*self.MAX_QUEUE_LINES
+                    end = min(len(sections), (i + 1)*self.MAX_QUEUE_LINES)
+                    message = '\n  '.join(sections[start:end])
+                    self.send(message)
+            else:
+                self.send(text)
         else:
             self.send(messages.QUEUE_EMPTY)
 
@@ -89,7 +106,7 @@ class BotFunction(Command):
                    messages.FORBIDDEN_ITEM_CHARACTERS):
                 self.send(messages.FORBIDDEN_ITEM_MESSAGE)
                 return
-        item.replace('*', '\\*')
+
         if not self.has_queue():
             self.make_queue()
 
@@ -170,8 +187,7 @@ class BotFunction(Command):
         index, *item = args
         item = ' '.join(item)
         # Check item
-
-        if any([messages.FORBIDDEN_ITEM_CHARACTERS in item]):
+        if any([fc in item for fc in messages.FORBIDDEN_ITEM_CHARACTERS]):
             self.send(messages.FORBIDDEN_ITEM_MESSAGE)
             return
         if item in self.queue:
