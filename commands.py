@@ -3,207 +3,201 @@ import random
 from utils import queue, messages
 
 
-def create_queue(context):
-    """Make a new queue for the chat context"""
-    context.chat_data['queue'] = queue.Queue()
+class Command:
+    """Telegram command handler"""
+
+    def __init__(self, update, context):
+        self.update = update
+        self.context = context
+
+    @property
+    def queue(self):
+        """Return the chat's Queue object"""
+        return self.context.chat_data['queue']
+
+    def has_queue(self):
+        """Return True if the chat has a queue"""
+        return 'queue' in self.context.chat_data
+
+    def make_queue(self):
+        """Assign a queue to the chat"""
+        self.context.chat_data['queue'] = queue.Queue()
+
+    def clear_queue(self):
+        """Remove the queue from the chat"""
+        if self.has_queue():
+            self.context.chat_data.pop('queue')
+
+    def send(self, message, **kwformat):
+        """Send a message in chat"""
+        self.context.bot.send_message(
+            chat_id=self.update.effective_chat.id,
+            text=message.format(**kwformat),
+            parse_mode=telegram.ParseMode.MARKDOWN,
+        )
+
+    def echo(self):
+        """Echo the message"""
+        self.send(self.update.message.text)
+
+    def show_args(self):
+        """Show arguments passed to the command"""
+        answer = 'Your args:\n    ' + '\n    '.join(self.context.args)
+        self.send(answer)
 
 
-def clear_queue(context):
-    """Delete the queue from chat context"""
-    if has_queue(context):
-        context.chat_data.pop('queue')
+class BotFunction(Command):
+    @staticmethod
+    def make_callable(bot_func):
+        """Decorate a function with the standard signature as in
+        f(update, context), then call it as a command"""
 
+        def func_callable(update, context):
+            bf = BotFunction(update, context)
+            bfargs = bf.context.args
+            return bot_func(bf, *bfargs)
+        return func_callable
 
-def has_queue(context):
-    """Return True if chat context already has a queue"""
-    return 'queue' in context.chat_data
+    def help(self, *args):
+        self.send(messages.HELP)
 
+    def start(self, *args):
+        self.send(messages.START)
 
-def start(update, context):
-    """Send starting message"""
-    messages.send(update, context, messages.START, parse_mode=telegram.ParseMode.MARKDOWN)
+    def print_queue(self, *args):
+        if self.has_queue():
+            self.send(self.queue.format())
+        else:
+            self.send(messages.QUEUE_EMPTY)
 
+    def add(self, *args):
+        """Append an item in queue"""
+        if len(args) == 0:
+            # No arguments: push user name into the list
+            item = self.update.message.from_user.username
+        else:
+            # User asked for something specific. Check that the input doesn't
+            # contain any forbidden character
+            item = ' '.join(args)
+            if any(forbidden_char in item for forbidden_char in
+                   messages.FORBIDDEN_ITEM_CHARACTERS):
+                self.send(messages.FORBIDDEN_ITEM_MESSAGE)
+                return
 
-def echo(update, context):
-    """Echo the message"""
-    messages.send(update, context, update.message.text)
+        if not self.has_queue():
+            self.make_queue()
 
+        if item in self.queue:
+            self.send(
+                messages.ITEM_ALREADY_IN_QUEUE, item=item,
+                index=self.queue.index(item) + 1)
+        else:
+            self.queue.append(item)
+            self.send(messages.ADD_SUCCESS, item=item, index=len(self.queue))
 
-def show_args(update, context):
-    """Show arguments passed to the command"""
-    answer = 'Your args:\n    ' + '\n    '.join(context.args)
-    messages.send(update, context, answer)
-
-
-def print_queue(update, context):
-    """Print the queue"""
-    if has_queue(context):
-        messages.send(update, context, context.chat_data['queue'].format())
-    else:
-        messages.send(update, context, messages.QUEUE_EMPTY)
-
-
-def add(update, context):
-    """Append an item in queue"""
-    if len(context.args) == 0:
-        # No arguments: push user name into the list
-        item = update.message.from_user.username
-    else:
-        # User asked for something specific. Check that the input doesn't
-        # contain any forbidden character
-        item = ' '.join(context.args)
-        if any(forbidden_char in item for forbidden_char in messages.FORBIDDEN_ITEM_CHARACTERS):
-            messages.send(update, context, messages.FORBIDDEN_ITEM_MESSAGE)
+    def next(self, *args):
+        """Pick next turn"""
+        if not self.has_queue():
+            self.send(messages.QUEUE_EMPTY)
             return
 
-    if not has_queue(context):
-        create_queue(context)
+        # Extract item from queue
+        item, _ = self.queue.pop()
+        if len(self.queue) == 0:
+            self.clear_queue()
 
-    q = context.chat_data['queue']
-    if item in q:
-        messages.send(
-            update, context, messages.ITEM_ALREADY_IN_QUEUE.format(item=item, index=q.index(item) + 1),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-    else:
-        q.append(item)
-        messages.send(
-            update, context,
-            messages.EMOJI_SUCCESS + " *{}* added to queue in position {}".format(item, len(q)),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
+        # Generate reply
+        if len(args) == 0:
+            # Default reply
+            attached_message = ''
+            reply = random.choice(messages.NEXT_DEFAULT_MESSAGES)
+        else:
+            # Custom reply
+            attached_message = ' '.join(args)
+            reply = messages.NEXT_CUSTOM_REPLY
+        self.send(reply, item=item, attached_message=attached_message)
 
+    def clear(self, *args):
+        self.clear_queue()
+        self.send(messages.CLEAR_SUCCESS)
 
-def next(update, context):
-    """Pick next turn"""
-    if not has_queue(context):
-        messages.send(update, context, messages.QUEUE_EMPTY)
-        return
-    q = context.chat_data['queue']
+    def rm(self, *args):
+        """Remove item at provided element in list"""
+        if not self.has_queue():
+            self.send(messages.QUEUE_EMPTY)
+            return
+        # Check (only the) index was provided
+        if len(args) < 1:
+            self.send(messages.RM_INDEX_NOT_PROVIDED)
+            return
+        elif len(args) > 1:
+            self.send(messages.RM_TOO_MANY_ARGUMENTS)
+            return
 
-    # Extract item from queue
-    item, _ = q.pop()
-    if len(q) == 0:
-        clear_queue(context)
+        # Check if index is a number
+        index = args[0]
+        if not index.isnumeric():
+            self.send(messages.RM_INDEX_NOT_RECOGNIZED, index=index)
+            return
+        index = int(index)
+        # Check if index is in range
+        if index <= 0 or index > len(self.queue):
+            self.send(messages.RM_INDEX_NOT_IN_QUEUE, index=index)
+            return
 
-    # Generate reply
-    if len(context.args) == 0:
-        # Default reply
-        reply = random.choice(messages.NEXT_DEFAULT_MESSAGES).format(item=str(item))
-    else:
-        # Custom reply
-        custom_message = ' '.join(context.args)
-        reply = "*{item}* : {custom_message}".format(item=str(item), custom_message=custom_message)
-    messages.send(update, context, reply, parse_mode=telegram.ParseMode.MARKDOWN)
+        # Remove item and announce it
+        item, _ = self.queue.remove(index - 1)
+        if len(self.queue) == 0:
+            self.clear_queue()
+        self.send(messages.RM_SUCCESS, item=item)
 
+    def insert(self, *args):
+        """Insert item in the list"""
+        if not self.has_queue():
+            self.send(messages.INSERT_QUEUE_EMPTY)
 
-def clear(update, context):
-    """Clear queue"""
-    clear_queue(context)
-    messages.send(update, context, messages.EMOJI_SUCCESS + ' Queue cleared!')
+        # Check arguments
+        if len(args) < 2:
+            self.send(messages.INSERT_NOT_ENOUGH_ARGUMENTS)
+            return
 
+        index, *item = args
+        item = ' '.join(item)
+        # Check item
 
-def rm(update, context):
-    """Remove item at provided element in list"""
-    if not has_queue(context):
-        messages.send(update, context, messages.QUEUE_EMPTY)
-        return
-    # Check (only the) index was provided
-    if len(context.args) < 1:
-        # Index not provided
-        messages.send(update, context, messages.RM_INDEX_NOT_PROVIDED, parse_mode=telegram.ParseMode.MARKDOWN)
-        return
-    elif len(context.args) > 1:
-        # Too many arguments
-        messages.send(update, context, messages.RM_TOO_MANY_ARGUMENTS, parse_mode=telegram.ParseMode.MARKDOWN)
-        return
+        if any([messages.FORBIDDEN_ITEM_CHARACTERS in item]):
+            self.send(messages.FORBIDDEN_ITEM_MESSAGE)
+            return
+        if item in self.queue:
+            self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item,
+                      index=self.queue.index(item) + 1)
+            return
 
-    index = context.args[0]
-    if not index.isnumeric():
-        messages.send(
-            update, context,
-            messages.RM_INDEX_NOT_RECOGNIZED.format(index=index),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-        return
+        # Check index
+        if not index.isnumeric():
+            self.send(messages.INSERT_INDEX_NOT_RECOGNIZED, index=index)
+            return
+        index = int(index)
+        if index <= 0 or index > len(q):
+            self.send(messages.INSERT_INDEX_OUT_OF_BOUNDS, index=index)
+            return
 
-    q = context.chat_data['queue']
-    index = int(index)
-    if index <= 0 or index > len(q):
-        messages.send(
-            update, context,
-            messages.RM_INDEX_NOT_IN_QUEUE.format(index=index),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-        return
-    item, _ = q.remove(index - 1)
-    if len(q) == 0:
-        clear_queue(context)
-    messages.send(update, context, messages.RM_SUCCESS.format(item=item), parse_mode=telegram.ParseMode.MARKDOWN)
-
-
-def insert(update, context):
-    """Insert item in the list"""
-    # Check arguments
-    if len(context.args) < 2:
-        # Not enough arguments
-        messages.send(update, context, messages.INSERT_NOT_ENOUGH_ARGUMENTS)
-        return
-    index, *item = context.args
-    item = ' '.join(item)
-
-    if not has_queue(context):
-        create_queue(context)
-    q = context.chat_data['queue']
-
-    # Check index
-    if not index.isnumeric():
-        messages.send(
-            update, context,
-            messages.INSERT_INDEX_NOT_RECOGNIZED.format(index=index),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-        return
-    index = int(index)
-    if index <= 0 or index > len(q):
-        messages.send(
-            update, context,
-            messages.INSERT_INDEX_OUT_OF_BOUNDS.format(index=index),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-        return
-
-    # Check item
-    if item in q:
-        messages.send(
-            update, context,
-            messages.ITEM_ALREADY_IN_QUEUE.format(item=item, index=q.index(item) + 1),
-            parse_mode=telegram.ParseMode.MARKDOWN
-        )
-        return
-    q.insert(index - 1, item)
-    messages.send(
-        update, context,
-        messages.INSERT_SUCCESS.format(item=item, index=q.index(item) + 1),
-        parse_mode=telegram.ParseMode.MARKDOWN
-    )
-
-
-def bot_help(update, context):
-    """Print help"""
-    messages.send(update, context, messages.HELP, parse_mode=telegram.ParseMode.MARKDOWN)
+        # Insert item
+        self.queue.insert(index - 1, item)
+        self.send(messages.INSERT_SUCCESS, item=item,
+                  index=self.queue.index(item) + 1)
 
 
 COMMANDS = {
     # Debug commands
     # 'echo': echo,
     # 'showargs': show_args,
-    'help': bot_help,
-    'start': start,
-    'queue': print_queue,
-    'add': add,
-    'rm': rm,
-    'insert': insert,
-    'next': next,
-    'clear': clear
+    'help':     BotFunction.help,
+    'start':    BotFunction.start,
+    'queue':    BotFunction.print_queue,
+    'add':      BotFunction.add,
+    'rm':       BotFunction.rm,
+    'insert':   BotFunction.insert,
+    'next':     BotFunction.next,
+    'clear':    BotFunction.clear
 }

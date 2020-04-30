@@ -61,6 +61,9 @@ class Queue:
             res += '\n'
         return res
 
+    def is_empty(self):
+        return len(self) == 0
+
     def __iter__(self):
         return iter(self._items)
 

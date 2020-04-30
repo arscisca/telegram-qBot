@@ -21,12 +21,13 @@ if __name__ == "__main__":
     if token is None:
         print("Bot token was not found in file '{}'".format('.token'))
         exit(-1)
-    updater = Updater(token=read_token('fname'), use_context=True)
+    updater = Updater(token=token, use_context=True)
     dispatcher = updater.dispatcher
     # Command handlers
     handlers = {}
     for command, func in commands.COMMANDS.items():
-        handler = CommandHandler(command, func)
+        callable_func = commands.BotFunction.make_callable(func)
+        handler = CommandHandler(command, callable_func)
         dispatcher.add_handler(handler)
         handlers[command] = handler
     # Logger
