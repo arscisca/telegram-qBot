@@ -28,7 +28,7 @@ class Command:
         if self.has_queue():
             self.context.chat_data.pop('queue')
 
-    def send(self, message, **kwformat):
+    def send_md(self, message, **kwformat):
         """Send a message in chat"""
         self.context.bot.send_message(
             chat_id=self.update.effective_chat.id,
@@ -36,7 +36,7 @@ class Command:
             parse_mode=telegram.ParseMode.MARKDOWN,
         )
 
-    def send_simple(self, message, **kwformat):
+    def send(self, message, **kwformat):
         self.context.bot.send_message(
             chat_id=self.update.effective_chat.id,
             text=message.format(**kwformat)
@@ -68,11 +68,11 @@ class BotFunction(Command):
         self.send(messages.HELP)
 
     def start(self, *args):
-        self.send(messages.START)
+        self.send_md(messages.START)
 
     def print_queue(self, *args):
         if self.has_queue():
-            self.send_simple(self.queue.format())
+            self.send(self.queue.format())
         else:
             self.send(messages.QUEUE_EMPTY)
 
@@ -89,7 +89,7 @@ class BotFunction(Command):
                    messages.FORBIDDEN_ITEM_CHARACTERS):
                 self.send(messages.FORBIDDEN_ITEM_MESSAGE)
                 return
-
+        item.replace('*', '\\*')
         if not self.has_queue():
             self.make_queue()
 
