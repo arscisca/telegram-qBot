@@ -68,7 +68,7 @@ class BotFunction(Command):
         return func_callable
 
     def help(self, *args):
-        self.send(messages.HELP)
+        self.send_md(messages.HELP)
 
     def start(self, *args):
         self.send_md(messages.START)
