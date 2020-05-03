@@ -200,7 +200,7 @@ class BotFunction(Command):
             self.send(messages.INSERT_INDEX_NOT_RECOGNIZED, index=index)
             return
         index = int(index)
-        if index <= 0 or index > len(q):
+        if index <= 0 or index > len(self.queue):
             self.send(messages.INSERT_INDEX_OUT_OF_BOUNDS, index=index)
             return
 
