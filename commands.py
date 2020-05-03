@@ -55,6 +55,7 @@ class Command:
 
 class BotFunction(Command):
     MAX_QUEUE_LINES = 25
+    MAX_ITEM_LENGTH = 30
     @staticmethod
     def make_callable(bot_func):
         """Decorate a function with the standard signature as in
@@ -105,6 +106,10 @@ class BotFunction(Command):
             if any(forbidden_char in item for forbidden_char in
                    messages.FORBIDDEN_ITEM_CHARACTERS):
                 self.send(messages.FORBIDDEN_ITEM_MESSAGE)
+                return
+            if len(item) > self.MAX_ITEM_LENGTH:
+                self.send(messages.ITEM_TOO_LONG, item=item,
+                          max_len=self.MAX_ITEM_LENGTH)
                 return
 
         if not self.has_queue():

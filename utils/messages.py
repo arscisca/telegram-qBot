@@ -21,6 +21,7 @@ This is the qBot, the bot to organize your queues. Here is a list of commands:
 
 QUEUE_EMPTY = "The queue is currently empty"
 ITEM_ALREADY_IN_QUEUE = EMOJI_RED_CROSS + " {item} is already in the queue at position {index}!"
+ITEM_TOO_LONG = EMOJI_RED_CROSS + " '{item}' is too long. Please use less than {max_len} characters."
 
 FORBIDDEN_ITEM_CHARACTERS = {'\n'}
 FORBIDDEN_ITEM_MESSAGE = EMOJI_RED_CROSS + " Can't add {item} to the list: there is a forbidden character in your message"
