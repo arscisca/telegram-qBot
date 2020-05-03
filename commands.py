@@ -189,7 +189,8 @@ class BotFunction(Command):
             self.send(messages.INSERT_NOT_ENOUGH_ARGUMENTS)
             return
 
-        index, *item = args
+        index = args[-1]
+        item = args[:-1]
         item = ' '.join(item)
         # Check item
         if any([fc in item for fc in messages.FORBIDDEN_ITEM_CHARACTERS]):

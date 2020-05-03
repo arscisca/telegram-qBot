@@ -2,7 +2,8 @@ EMOJI_RED_CROSS = '\U0000274C'
 EMOJI_SUCCESS = '\U0001F44D'
 
 START = """I am a bot! \U0001F916
-Please give me a command. I won't rebel. For now."""
+Please give me a command. I won't rebel. For now.
+Type '/help' for a list of commands"""
 
 HELP = r"""
 This is the qBot, the bot to organize your queues. Here is a list of commands:
@@ -36,7 +37,7 @@ RM_INDEX_NOT_RECOGNIZED =   EMOJI_RED_CROSS + " I did not recognize '{index}' as
 RM_INDEX_NOT_IN_QUEUE =     EMOJI_RED_CROSS + " Row {index} does not exist. Consult the queue with the command '/queue'"
 RM_SUCCESS =                EMOJI_SUCCESS   + " Removed {item} from the queue"
 
-INSERT_NOT_ENOUGH_ARGUMENTS =   EMOJI_RED_CROSS + " Please provide the item and the row where you want to insert the item, as in '/insert' row-number item"
+INSERT_NOT_ENOUGH_ARGUMENTS =   EMOJI_RED_CROSS + " Please provide the item and the row where you want to insert the item, as in '/insert item row-number'"
 INSERT_INDEX_NOT_RECOGNIZED =   RM_INDEX_NOT_RECOGNIZED
 INSERT_INDEX_OUT_OF_BOUNDS =    EMOJI_RED_CROSS + " Row '{index}' is outside of the queue"
 INSERT_QUEUE_EMPTY =            EMOJI_RED_CROSS + " Queue is currently empty. Please use '/add item' to add items in the queue before editing it!"
