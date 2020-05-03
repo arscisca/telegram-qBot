@@ -2,21 +2,21 @@ EMOJI_RED_CROSS = '\U0000274C'
 EMOJI_SUCCESS = '\U0001F44D'
 
 START = """I am a bot! \U0001F916
-Please give me a command. I won't rebel. _For now_."""
+Please give me a command. I won't rebel. For now."""
 
 HELP = r"""
 This is the qBot, the bot to organize your queues. Here is a list of commands:
-*Basic*:
+Basic:
     /help: show this help menu
     /start: start your conversation with the bot
-*Queueing*:
+Queueing:
     /queue: show queue
-    /add [_element_]: add _element_ in the line. If no _element_ is provided, the user's username is added in the queue
-    /next [_message_]: announce the first element of the queue with an optional message_
+    /add [item]: add [item] to the line. If no item is provided, the user's username is added in the queue
+    /next [message]: announce the first element of the queue with an optional message
     /clear: clear queue
-*Queue editing*:
-    /rm _row-number_: remove the row from the list
-    /insert _element_ _row-number_: insert _element_ in the specified row
+Queue editing:
+    /rm row-number: remove the row from the list
+    /insert item row-number: insert item in the specified row
 """
 
 QUEUE_EMPTY = "The queue is currently empty"

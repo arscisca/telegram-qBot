@@ -68,10 +68,10 @@ class BotFunction(Command):
         return func_callable
 
     def help(self, *args):
-        self.send_md(messages.HELP)
+        self.send(messages.HELP)
 
     def start(self, *args):
-        self.send_md(messages.START)
+        self.send(messages.START)
 
     def print_queue(self, *args):
         if self.has_queue():
