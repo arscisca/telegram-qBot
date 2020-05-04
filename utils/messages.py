@@ -48,10 +48,10 @@ INSERT_QUEUE_EMPTY =            EMOJI_RED_CROSS + " Queue is currently empty. Pl
 INSERT_QUEUE_FROZEN =           EMOJI_FROZEN + " Can't insert '{item}': queue is frozen! Run '/unfreeze' to unfreeze it"
 INSERT_SUCCESS =                EMOJI_SUCCESS   + " {item} inserted at position {index}"
 
-FREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can freeze the chat!"
+FREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can freeze the queue!"
 FREEZE_SUCCESS = EMOJI_FROZEN + " Queue frozen!"
 
-UNFREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can unfreeze the chat!"
+UNFREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can unfreeze the queue!"
 UNFREEZE_SUCCESS = "\U0001F525 Queue unfrozen!"
 
 NEXT_DEFAULT_MESSAGES = [
