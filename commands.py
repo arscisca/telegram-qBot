@@ -211,6 +211,7 @@ class BotFunction(Command):
         """Insert item in the list"""
         if not self.has_queue():
             self.send(messages.INSERT_QUEUE_EMPTY)
+            return
 
         # Check arguments
         if len(args) < 2:
