@@ -10,17 +10,28 @@ HELP = r"""
 This is the qBot, the bot to organize your queues. Here is a list of commands:
 Basic:
     /help: show this help menu
-    /start: start your conversation with the bot
+    /start: start your conversation with the
+        bot
+
 Queueing:
     /queue: show queue
-    /add [item]: add [item] to the line. If no item is provided, the user's username is added in the queue
-    /next [message]: announce the first element of the queue with an optional message
+    /add [item]: add [item] to the line. 
+        If no item is provided, the user's 
+        username is added in the queue
+    /next [message]: announce the first 
+        element of the queue with an 
+        optional message
     /clear: clear queue
-    /freeze: freeze queue. Items can't be added or inserted until /unfreeze is requested
+    /freeze: freeze queue. Items can't be
+        added or inserted until /unfreeze 
+        is requested
     /unfreeze: unfreeze queue
+    
 Queue editing:
-    /rm row-number: remove the row from the list
-    /insert item row-number: insert item in the specified row
+    /rm row-number: remove the row from
+        the list
+    /insert item row-number: insert item in 
+        the specified row
 """
 
 QUEUE_EMPTY = "The queue is currently empty"
