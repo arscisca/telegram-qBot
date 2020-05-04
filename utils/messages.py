@@ -1,5 +1,6 @@
 EMOJI_RED_CROSS = '\U0000274C'
 EMOJI_SUCCESS = '\U0001F44D'
+EMOJI_FROZEN = '\U0001F9CA'
 
 START = """I am a bot! \U0001F916
 Please give me a command. I won't rebel. For now.
@@ -28,6 +29,7 @@ FORBIDDEN_ITEM_CHARACTERS = {'\n'}
 FORBIDDEN_ITEM_MESSAGE = EMOJI_RED_CROSS + " Can't add {item} to the list: there is a forbidden character in your message"
 
 ADD_SUCCESS = EMOJI_SUCCESS + " {item} added to the queue in position {index}"
+ADD_QUEUE_FROZEN = EMOJI_FROZEN + " Can't add '{item}': queue is frozen!"
 
 CLEAR_SUCCESS = EMOJI_SUCCESS + " Queue cleared!"
 
@@ -41,7 +43,14 @@ INSERT_NOT_ENOUGH_ARGUMENTS =   EMOJI_RED_CROSS + " Please provide the item and 
 INSERT_INDEX_NOT_RECOGNIZED =   RM_INDEX_NOT_RECOGNIZED
 INSERT_INDEX_OUT_OF_BOUNDS =    EMOJI_RED_CROSS + " Row '{index}' is outside of the queue"
 INSERT_QUEUE_EMPTY =            EMOJI_RED_CROSS + " Queue is currently empty. Please use '/add item' to add items in the queue before editing it!"
+INSERT_QUEUE_FROZEN =           EMOJI_FROZEN + " Can't insert '{item}': queue is frozen!"
 INSERT_SUCCESS =                EMOJI_SUCCESS   + " {item} inserted at position {index}"
+
+FREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can freeze the chat"
+FREEZE_SUCCESS = EMOJI_FROZEN + " Queue frozen!"
+
+UNFREEZE_NOT_AN_ADMIN = EMOJI_RED_CROSS + " Sorry, you don't have the permission: only admins can unfreeze the chat"
+UNFREEZE_SUCCESS = "\U0001F525 Queue unfrozen!"
 
 NEXT_DEFAULT_MESSAGES = [
     "{item}, it's your time to shine! \U00002728",

@@ -2,6 +2,7 @@ import telegram
 import random
 import math
 from utils import queue, messages
+from utils.mwt import MWT
 
 
 class Command:
@@ -52,10 +53,32 @@ class Command:
         answer = 'Your args:\n    ' + '\n    '.join(self.context.args)
         self.send(answer)
 
+    @MWT(timeout=60 * 60)
+    def get_admin_ids(self):
+        """Return a list of admin IDs.
+        Results are cached for 1 hour."""
+        bot = self.context.bot
+        chat_id = self.update.effective_chat.id
+
+        return [
+            admin.user.id for admin in bot.get_chat_administrators(chat_id)
+        ]
+
+    def is_request_by_admin(self):
+        """Return true if request was sent from an admin - or if the chat is
+        private."""
+        # Private chats have no admins
+        try:
+            ans = self.update.message.from_user.id in self.get_admin_ids()
+        except telegram.error.BadRequest:
+            # Private chats have all permissions
+            ans = True
+        return ans
 
 class BotFunction(Command):
     MAX_QUEUE_LINES = 25
     MAX_ITEM_LENGTH = 30
+
     @staticmethod
     def make_callable(bot_func):
         """Decorate a function with the standard signature as in
@@ -111,6 +134,11 @@ class BotFunction(Command):
                 self.send(messages.ITEM_TOO_LONG, item=item,
                           max_len=self.MAX_ITEM_LENGTH)
                 return
+
+        # Check if queue is frozen
+        if self.is_frozen():
+            self.send(messages.ADD_QUEUE_FROZEN, item=item)
+            return
 
         if not self.has_queue():
             self.make_queue()
@@ -201,6 +229,9 @@ class BotFunction(Command):
                       index=self.queue.index(item) + 1)
             return
 
+        if self.is_frozen():
+            self.send(messages.INSERT_QUEUE_FROZEN, item=item)
+
         # Check index
         if not index.isnumeric():
             self.send(messages.INSERT_INDEX_NOT_RECOGNIZED, index=index)
@@ -215,6 +246,26 @@ class BotFunction(Command):
         self.send(messages.INSERT_SUCCESS, item=item,
                   index=self.queue.index(item) + 1)
 
+    def freeze(self, *args):
+        # Freeze only if user is an admin
+        if self.is_request_by_admin():
+            self.context.chat_data['frozen'] = True
+            self.send(messages.FREEZE_SUCCESS)
+        else:
+            self.send(messages.FREEZE_NOT_AN_ADMIN)
+
+    def is_frozen(self):
+        return 'frozen' in self.context.chat_data
+
+    def unfreeze(self, *args):
+        # Unfreeze only if user is an admin
+        if self.is_request_by_admin():
+            if self.is_frozen():
+                self.context.chat_data.pop('frozen')
+            self.send(messages.UNFREEZE_SUCCESS)
+        else:
+            self.send(messages.UNFREEZE_NOT_AN_ADMIN)
+
 
 COMMANDS = {
     # Debug commands
@@ -227,5 +278,7 @@ COMMANDS = {
     'rm':       BotFunction.rm,
     'insert':   BotFunction.insert,
     'next':     BotFunction.next,
-    'clear':    BotFunction.clear
+    'clear':    BotFunction.clear,
+    'freeze':   BotFunction.freeze,
+    'unfreeze': BotFunction.unfreeze
 }
