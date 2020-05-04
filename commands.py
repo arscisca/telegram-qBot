@@ -225,13 +225,15 @@ class BotFunction(Command):
         if any([fc in item for fc in messages.FORBIDDEN_ITEM_CHARACTERS]):
             self.send(messages.FORBIDDEN_ITEM_MESSAGE)
             return
+
+        if self.is_frozen():
+            self.send(messages.INSERT_QUEUE_FROZEN, item=item)
+            return
+
         if item in self.queue:
             self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item,
                       index=self.queue.index(item) + 1)
             return
-
-        if self.is_frozen():
-            self.send(messages.INSERT_QUEUE_FROZEN, item=item)
 
         # Check index
         if not index.isnumeric():
