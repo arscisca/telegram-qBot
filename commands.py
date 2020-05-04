@@ -5,6 +5,12 @@ from utils import queue, messages
 from utils.mwt import MWT
 
 
+@MWT(timeout=60 * 60)
+def _get_admin_ids(bot, chat_id):
+    """Return a list of admin IDs. Results are cached for 1 hour."""
+    return [admin.user.id for admin in bot.get_chat_administrators(chat_id)]
+
+
 class Command:
     """Telegram command handler"""
 
@@ -53,27 +59,20 @@ class Command:
         answer = 'Your args:\n    ' + '\n    '.join(self.context.args)
         self.send(answer)
 
-    @MWT(timeout=60 * 60)
-    def get_admin_ids(self):
-        """Return a list of admin IDs.
-        Results are cached for 1 hour."""
-        bot = self.context.bot
-        chat_id = self.update.effective_chat.id
-
-        return [
-            admin.user.id for admin in bot.get_chat_administrators(chat_id)
-        ]
-
     def is_request_by_admin(self):
         """Return true if request was sent from an admin - or if the chat is
         private."""
         # Private chats have no admins
+        user_id = self.update.message.from_user.id
+        bot = self.context.bot
+        chat_id = self.update.effective_chat.id
         try:
-            ans = self.update.message.from_user.id in self.get_admin_ids()
+            ans = user_id in _get_admin_ids(bot, chat_id)
         except telegram.error.BadRequest:
             # Private chats have all permissions
             ans = True
         return ans
+
 
 class BotFunction(Command):
     MAX_QUEUE_LINES = 25
