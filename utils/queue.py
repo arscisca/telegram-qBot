@@ -45,6 +45,10 @@ class Queue:
             data = None
         return item, data
 
+    def clear(self):
+        self._items = []
+        self._data = {}
+
     def index(self, item):
         """Return the index of the item in line"""
         return self._items.index(item)
@@ -74,5 +78,5 @@ class Queue:
         return len(self._items)
 
     def __str__(self):
-        items = map(lambda obj: str(obj['item']), self._items)
+        items = map(lambda obj: str(obj), self._items)
         return '[' + ', '.join(items) + ']'
