@@ -2,95 +2,62 @@ import telegram
 import random
 import math
 from functools import wraps
-from utils import queue, messages
-from utils.mwt import MWT
+from utils import queue, messages, botrequest
+from utils.botrequest import BotRequest
+
+COMMANDS = {}
 
 
-@MWT(timeout=60 * 60)
-def _get_admin_ids(bot, chat_id):
-    """Return a list of admin IDs. Results are cached for 1 hour."""
-    return [admin.user.id for admin in bot.get_chat_administrators(chat_id)]
+def command(cmd_dict=None, cmd_name=''):
+    """Decorate a function with the standard signature as in
+    f(update, context), then call it as a command"""
+    def make_callable(func):
+        @wraps(func)
+        def func_callable(update, context):
+            bf = BotFunction(update, context)
+            bfargs = bf.context.args
+            return func(bf, *bfargs)
+
+        # Add function to dict
+        if cmd_dict is not None:
+            if cmd_name in cmd_dict:
+                raise KeyError("Command {} is already assigned to {}".format(cmd_name, cmd_dict[cmd_name]))
+            cmd_dict[cmd_name] = func_callable
+        return func_callable
+    return make_callable
 
 
-class Command:
-    """Telegram command handler"""
+def protected(permission, senderror=True):
+    """Decorator to protect a command.
+    Args:
+        permission: function to evaluate the user permission. The argument
+            of this function must be a Command object.
+            Returns True if command can be executed.
 
-    def __init__(self, update, context):
-        self.update = update
-        self.context = context
-
-    @property
-    def chat_type(self):
-        return self.update.effective_chat.type
-
-    @staticmethod
-    def protected(permission, senderror=True):
-        """Decorator to protect a command.
-        Args:
-            permission: function to evaluate the user permission. The argument
-                of this function must be a Command object.
-                Returns True if command can be executed.
-
-            senderror: if True, a default error message is sent. Otherwise
-                'permission' can send its own message
-        """
-        def protected_function(func):
-            @wraps(func)
-            def check_permissions(com, *args, **kwargs):
-                if permission(com):
-                    func(com, *args, *kwargs)
-                else:
-                    if senderror:
-                        user = com.update.message.from_user.username
-                        command = com.update.message.text
-                        com.send(messages.PERMISSION_NOT_GRANTED, user=user,
-                                 command=command)
-            return check_permissions
-        return protected_function
-
-    def send_md(self, message, **kwformat):
-        """Send a message in chat"""
-        self.context.bot.send_message(
-            chat_id=self.update.effective_chat.id,
-            text=message.format(**kwformat),
-            parse_mode=telegram.ParseMode.MARKDOWN,
-        )
-
-    def send(self, message, **kwformat):
-        self.context.bot.send_message(
-            chat_id=self.update.effective_chat.id,
-            text=message.format(**kwformat)
-        )
-
-    def echo(self):
-        """Echo the message"""
-        self.send(self.update.message.text)
-
-    def show_args(self):
-        """Show arguments passed to the command"""
-        answer = 'Your args:\n    ' + '\n    '.join(self.context.args)
-        self.send(answer)
-
-    def is_request_by_admin(self):
-        """Return true if request was sent from an admin - or if the chat is
-        private."""
-        # Private chats have no admins
-        if self.chat_type in {telegram.Chat.GROUP, telegram.Chat.SUPERGROUP}:
-            user_id = self.update.message.from_user.id
-            bot = self.context.bot
-            chat_id = self.update.effective_chat.id
-            return user_id in _get_admin_ids(bot, chat_id)
-        else:
-            # It's a private chat
-            return True
+        senderror: if True, a default error message is sent. Otherwise
+            'permission' can send its own message
+    """
+    def protected_function(func):
+        @wraps(func)
+        def check_permissions(com, *args, **kwargs):
+            if permission(com):
+                func(com, *args, *kwargs)
+            else:
+                if senderror:
+                    user = com.update.message.from_user.username
+                    command = com.update.message.text
+                    com.send(messages.PERMISSION_NOT_GRANTED, user=user, command=command)
+        return check_permissions
+    return protected_function
 
 
-class BotFunction(Command):
+class BotFunction(BotRequest):
+    """Class with all bot commands"""
     MAX_QUEUE_LINES = 25
     MAX_ITEM_LENGTH = 30
 
     def __init__(self, update, context):
-        Command.__init__(self, update, context)
+        botrequest.BotRequest.__init__(self, update, context)
         chat_data = self.context.chat_data
         if 'queue' not in chat_data:
             self.context.chat_data['queue'] = queue.Queue()
@@ -98,6 +65,10 @@ class BotFunction(Command):
             self.context.chat_data['is_frozen'] = True
         if 'is_protected' not in chat_data:
             self.context.chat_data['is_protected'] = True
+
+    def formatted_user(self):
+        user = self.update.message.from_user
+        return "{utag} ({uname})".format(uname=user.full_name, utag=user.username)
 
     @property
     def queue(self):
@@ -143,23 +114,15 @@ class BotFunction(Command):
             # Command can be run only if requested by an admin
             return self.is_request_by_admin()
 
-    @staticmethod
-    def make_callable(bot_func):
-        """Decorate a function with the standard signature as in
-        f(update, context), then call it as a command"""
-
-        def func_callable(update, context):
-            bf = BotFunction(update, context)
-            bfargs = bf.context.args
-            return bot_func(bf, *bfargs)
-        return func_callable
-
+    @command(COMMANDS, 'help')
     def help(self, *args):
         self.send(messages.HELP)
 
+    @command(COMMANDS, 'start')
     def start(self, *args):
         self.send(messages.START)
 
+    @command(COMMANDS, 'queue')
     def print_queue(self, *args):
         if self.has_queue():
             text = self.queue.format()
@@ -181,7 +144,8 @@ class BotFunction(Command):
         else:
             self.send(messages.QUEUE_EMPTY)
 
-    @Command.protected(check_not_frozen)
+    @command(COMMANDS, 'add')
+    @protected(check_not_frozen)
     def add(self, *args):
         """Append an item in queue. This can be done only if the queue is not
         frozen."""
@@ -197,27 +161,21 @@ class BotFunction(Command):
                 self.send(messages.FORBIDDEN_ITEM_MESSAGE)
                 return
             if len(item) > self.MAX_ITEM_LENGTH:
-                self.send(messages.ITEM_TOO_LONG, item=item,
-                          max_len=self.MAX_ITEM_LENGTH)
+                self.send(messages.ITEM_TOO_LONG, item=item, max_len=self.MAX_ITEM_LENGTH)
                 return
 
         if item in self.queue:
-            self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item,
-                      index=self.queue.index(item) + 1)
+            self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item, index=self.queue.index(item) + 1)
             return
 
         self.queue.append(item)
         if self.chat_type == telegram.Chat.PRIVATE:
-            self.send(messages.ADD_SUCCESS_PRIVATE,
-                      item=item, index=len(self.queue))
+            self.send(messages.ADD_SUCCESS_PRIVATE, item=item, index=len(self.queue))
         else:
-            user = self.update.message.from_user
-            user = "{utag} ({uname})".format(uname=user.full_name,
-                                             utag=user.username)
-            self.send(messages.ADD_SUCCESS_GROUP, user=user, item=item,
-                      index=len(self.queue))
+            self.send(messages.ADD_SUCCESS_GROUP, user=self.formatted_user(), item=item, index=len(self.queue))
 
-    @Command.protected(check_not_protected)
+    @command(COMMANDS, 'next')
+    @protected(check_not_protected)
     def next(self, *args):
         """Pick next turn"""
         if not self.has_queue():
@@ -238,12 +196,14 @@ class BotFunction(Command):
             reply = messages.NEXT_CUSTOM_REPLY
         self.send(reply, item=item, attached_message=attached_message)
 
-    @Command.protected(check_not_protected)
+    @command(COMMANDS, 'protected')
+    @protected(check_not_protected)
     def clear(self, *args):
         self.clear_queue()
         self.send(messages.CLEAR_SUCCESS)
 
-    @Command.protected(check_not_protected)
+    @command(COMMANDS, 'rm')
+    @protected(check_not_protected)
     def rm(self, *args):
         """Remove item at provided element in list"""
         if not self.has_queue():
@@ -272,7 +232,8 @@ class BotFunction(Command):
         item, _ = self.queue.remove(index - 1)
         self.send(messages.RM_SUCCESS, item=item)
 
-    @Command.protected(check_not_frozen)
+    @command(COMMANDS, 'insert')
+    @protected(check_not_frozen)
     def insert(self, *args):
         """Insert item in the list"""
         if not self.has_queue():
@@ -292,8 +253,7 @@ class BotFunction(Command):
             self.send(messages.FORBIDDEN_ITEM_MESSAGE)
             return
         if item in self.queue:
-            self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item,
-                      index=self.queue.index(item) + 1)
+            self.send(messages.ITEM_ALREADY_IN_QUEUE, item=item, index=self.queue.index(item) + 1)
             return
 
         # Check index
@@ -308,52 +268,32 @@ class BotFunction(Command):
         # Insert item
         self.queue.insert(index - 1, item)
         if self.chat_type == telegram.Chat.PRIVATE:
-            self.send(messages.INSERT_SUCCESS_PRIVATE,
-                      item=item, index=len(self.queue))
+            self.send(messages.INSERT_SUCCESS_PRIVATE, item=item, index=len(self.queue))
         else:
-            user = self.update.message.from_user
-            user = "{utag} ({uname})".format(uname=user.full_name,
-                                             utag=user.username)
-            self.send(messages.INSERT_SUCCESS_GROUP, user=user, item=item,
-                      index=len(self.queue))
+            self.send(messages.INSERT_SUCCESS_GROUP, user=self.formatted_user(), item=item, index=len(self.queue))
 
-    @Command.protected(Command.is_request_by_admin)
+    @command(COMMANDS, 'freeze')
+    @protected(BotRequest.is_request_by_admin)
     def freeze(self, *args):
         """Freeze queue. Can only be requested by admins"""
         self.is_frozen = True
         self.send(messages.FREEZE_SUCCESS)
 
-    @Command.protected(Command.is_request_by_admin)
+    @command(COMMANDS, 'unfreeze')
+    @protected(BotRequest.is_request_by_admin)
     def unfreeze(self, *args):
         """Unfreeze queue. Can only be requested by admins"""
         self.is_frozen = False
         self.send(messages.UNFREEZE_SUCCESS)
 
-    @Command.protected(Command.is_request_by_admin)
+    @command(COMMANDS, 'enable_protection')
+    @protected(BotRequest.is_request_by_admin)
     def enable_protection(self, *args):
         self.is_protected = True
         self.send(messages.PROTECTION_ENABLED)
 
-    @Command.protected(Command.is_request_by_admin)
+    @command(COMMANDS, 'disable_protection')
+    @protected(BotRequest.is_request_by_admin)
     def disable_protection(self, *args):
         self.is_protected = False
         self.send(messages.PROTECTION_DISABLED)
-
-
-COMMANDS = {
-    # Debug commands
-    # 'echo': echo,
-    # 'showargs': show_args,
-    'help':                 BotFunction.help,
-    'start':                BotFunction.start,
-    'queue':                BotFunction.print_queue,
-    'add':                  BotFunction.add,
-    'rm':                   BotFunction.rm,
-    'insert':               BotFunction.insert,
-    'next':                 BotFunction.next,
-    'clear':                BotFunction.clear,
-    'freeze':               BotFunction.freeze,
-    'unfreeze':             BotFunction.unfreeze,
-    'enable_protection':    BotFunction.enable_protection,
-    'disable_protection':   BotFunction.disable_protection
-}

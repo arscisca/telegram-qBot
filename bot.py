@@ -1,6 +1,6 @@
 from telegram.ext import Updater, CommandHandler
 import logging
-import commands
+import botfunctions
 
 
 def read_token(fname):
@@ -25,9 +25,8 @@ if __name__ == "__main__":
     dispatcher = updater.dispatcher
     # Command handlers
     handlers = {}
-    for command, func in commands.COMMANDS.items():
-        callable_func = commands.BotFunction.make_callable(func)
-        handler = CommandHandler(command, callable_func)
+    for command, func in botfunctions.COMMANDS.items():
+        handler = CommandHandler(command, func)
         dispatcher.add_handler(handler)
         handlers[command] = handler
     # Logger
