@@ -9,38 +9,30 @@ Please give me a command. I won't rebel. For now.
 Type '/help' for a list of commands"""
 
 HELP = """
-This is the qBot, the bot to organize your queues. Here is a list of
-commands:
+This is the qBot, the bot to organize your queues. Here is a list of commands:
 Basic:
-    /help: show this help menu
-    /start: start your conversation with the bot
+/help: show this help menu
+/start: start your conversation with the bot
 
 Queueing:
-    /queue: show queue
-    /add [item]: add item to the line. If no item is provided, 
-        the user's username is added in the queue
-    /next [message]: announce the first element of the queue 
-        with an optional message
-    /clear: clear queue
+/queue: show queue
+/add [item]: add item to the line. If no item is provided, the user's username is added in the queue
+/next [message]: announce the first element of the queue with an optional message
+/clear: clear queue
         
 Queue editing:
-    /rm row-number: remove the row from the list
-    /insert item row-number: insert item in the specified row
+/rm row-number: remove the row from the list
+/insert item row-number: insert item in the specified row
 
 For group admins:
-    Group admins can always run any command, even when the 
-    queue is frozen. They also have the following commands 
-    available:
-    
-    \U0001F512 /enable_protection: non-admins can only run /help, 
-                /add, /queue
-    \U0001F512 /disable_protection:
-    \U0001F512 /freeze: freeze queue. Items can't be added or 
-                 inserted until /unfreeze is requested
-    \U0001F512 /unfreeze: unfreeze queue
-    
-    \U0001F512: Admins only in group chat, available in
-                private chats.
+Group admins can always run any command, even when the queue is frozen. They also have the following commands available:
+
+\U0001F512 /enable_protection: non-admins can only run /help, /add, /queue
+\U0001F512 /disable_protection:
+\U0001F512 /freeze: freeze queue. Items can't be added or inserted until /unfreeze is requested
+\U0001F512 /unfreeze: unfreeze queue
+
+\U0001F512: Admins only in group chat, available in private chats.
 """
 
 QUEUE_EMPTY = "The queue is currently empty"
