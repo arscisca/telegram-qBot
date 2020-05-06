@@ -59,6 +59,8 @@ class BotFunction(BotRequest):
     def __init__(self, update, context):
         botrequest.BotRequest.__init__(self, update, context)
         chat_data = self.context.chat_data
+        # A BotFunction object is created on every user request. chat_data is retained and common for every object
+        # relative to the same chat. No overriding must occur, otherwise data will be lost
         if 'queue' not in chat_data:
             self.context.chat_data['queue'] = queue.Queue()
         if 'is_frozen' not in chat_data:
@@ -67,6 +69,7 @@ class BotFunction(BotRequest):
             self.context.chat_data['is_protected'] = True
 
     def formatted_user(self):
+        """Return user's full name and username in a human readable format"""
         user = self.update.message.from_user
         return "{utag} ({uname})".format(uname=user.full_name, utag=user.username)
 
@@ -99,6 +102,7 @@ class BotFunction(BotRequest):
         self.context.chat_data['is_protected'] = protected
 
     def check_not_frozen(self):
+        """Checker function to give permissions to use commands that need the queue to be not frozen"""
         if not self.is_frozen:
             # Chat not frozen
             return True
@@ -106,6 +110,7 @@ class BotFunction(BotRequest):
             return self.is_request_by_admin()
 
     def check_not_protected(self):
+        """Check function """
         # Group only
         if not self.is_protected:
             # Chat not protected
@@ -196,7 +201,7 @@ class BotFunction(BotRequest):
             reply = messages.NEXT_CUSTOM_REPLY
         self.send(reply, item=item, attached_message=attached_message)
 
-    @command(COMMANDS, 'protected')
+    @command(COMMANDS, 'clear')
     @protected(check_not_protected)
     def clear(self, *args):
         self.clear_queue()
