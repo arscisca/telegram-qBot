@@ -107,7 +107,13 @@ class BotFunction(BotRequest):
             # Chat not frozen
             return True
         else:
-            return self.is_request_by_admin()
+            if self.is_request_by_admin():
+                return True
+            else:
+                user    = self.formatted_user()
+                action  = self.update.message.text
+                self.send(messages.QUEUE_IS_FROZEN, user=user, action=action)
+                return False
 
     def check_not_protected(self):
         """Check function """
@@ -116,8 +122,15 @@ class BotFunction(BotRequest):
             # Chat not protected
             return True
         else:
-            # Command can be run only if requested by an admin
-            return self.is_request_by_admin()
+            # Chat protected
+            if not self.is_request_by_admin():
+                return True
+            else:
+                # User can't perform the action, send message
+                user = self.formatted_user()
+                action = self.update.message.text
+                self.send(messages.QUEUE_IS_PROTECTED, user=user, action=action)
+                return False
 
     @command(COMMANDS, 'help')
     def help(self, *args):
@@ -150,7 +163,7 @@ class BotFunction(BotRequest):
             self.send(messages.QUEUE_EMPTY)
 
     @command(COMMANDS, 'add')
-    @protected(check_not_frozen)
+    @protected(check_not_frozen, senderror=False)
     def add(self, *args):
         """Append an item in queue. This can be done only if the queue is not
         frozen."""
@@ -180,7 +193,7 @@ class BotFunction(BotRequest):
             self.send(messages.ADD_SUCCESS_GROUP, user=self.formatted_user(), item=item, index=len(self.queue))
 
     @command(COMMANDS, 'next')
-    @protected(check_not_protected)
+    @protected(check_not_protected, senderror=False)
     def next(self, *args):
         """Pick next turn"""
         if not self.has_queue():
@@ -202,13 +215,13 @@ class BotFunction(BotRequest):
         self.send(reply, item=item, attached_message=attached_message)
 
     @command(COMMANDS, 'clear')
-    @protected(check_not_protected)
+    @protected(check_not_protected, senderror=False)
     def clear(self, *args):
         self.clear_queue()
         self.send(messages.CLEAR_SUCCESS)
 
     @command(COMMANDS, 'rm')
-    @protected(check_not_protected)
+    @protected(check_not_protected, senderror=False)
     def rm(self, *args):
         """Remove item at provided element in list"""
         if not self.has_queue():
@@ -238,7 +251,8 @@ class BotFunction(BotRequest):
         self.send(messages.RM_SUCCESS, item=item)
 
     @command(COMMANDS, 'insert')
-    @protected(check_not_frozen)
+    @protected(check_not_protected, senderror=False)
+    @protected(check_not_frozen, senderror=False)
     def insert(self, *args):
         """Insert item in the list"""
         if not self.has_queue():
@@ -273,9 +287,9 @@ class BotFunction(BotRequest):
         # Insert item
         self.queue.insert(index - 1, item)
         if self.chat_type == telegram.Chat.PRIVATE:
-            self.send(messages.INSERT_SUCCESS_PRIVATE, item=item, index=len(self.queue))
+            self.send(messages.INSERT_SUCCESS_PRIVATE, item=item, index=index)
         else:
-            self.send(messages.INSERT_SUCCESS_GROUP, user=self.formatted_user(), item=item, index=len(self.queue))
+            self.send(messages.INSERT_SUCCESS_GROUP, user=self.formatted_user(), item=item, index=index)
 
     @command(COMMANDS, 'freeze')
     @protected(BotRequest.is_request_by_admin)
