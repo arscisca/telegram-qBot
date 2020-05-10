@@ -1,6 +1,10 @@
 # Bot token file
 .token
 
+# Persistency files
+persistence/*
+!persistence/.keep
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
