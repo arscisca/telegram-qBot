@@ -123,7 +123,7 @@ class BotFunction(BotRequest):
             return True
         else:
             # Chat protected
-            if not self.is_request_by_admin():
+            if self.is_request_by_admin():
                 return True
             else:
                 # User can't perform the action, send message
