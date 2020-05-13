@@ -71,7 +71,10 @@ class BotFunction(BotRequest):
     def formatted_user(self):
         """Return user's full name and username in a human readable format"""
         user = self.update.message.from_user
-        return "{utag} ({uname})".format(uname=user.full_name, utag=user.username)
+        if user.username is None:
+            return str(user.full_name)
+        else:
+            return "{utag} ({uname})".format(uname=user.full_name, utag=user.username)
 
     @property
     def queue(self):
@@ -169,7 +172,7 @@ class BotFunction(BotRequest):
         frozen."""
         if len(args) == 0:
             # No arguments: push user name into the list
-            item = self.update.message.from_user.username
+            item = self.update.message.from_user.full_name
         else:
             # User asked for something specific. Check that the input doesn't
             # contain any forbidden character
